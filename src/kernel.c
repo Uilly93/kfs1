@@ -1,19 +1,7 @@
-// void kernel_main(void) {
-//     volatile char *v_mem = (volatile char*) 0xB8000; // first
-    
-//     v_mem[0] = '4';
-//     v_mem[1] = 0x2; // Green
-//     v_mem[2] = '2';
-//     v_mem[3] = 0x7;
-
-// 	while(1){
-// 		;
-// 	}
-// }
-
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <string.h>
 
 /* Check if the compiler thinks you are targeting the wrong operating system. */
 #if defined(__linux__)
@@ -65,8 +53,9 @@ size_t strlen(const char* str)
 
 #define VGA_WIDTH   80
 #define VGA_HEIGHT  25
-#define VGA_MEMORY  0xB8000 
+#define VGA_MEMORY  0xB8000
 
+char new_buff[2000];
 size_t terminal_row;
 size_t terminal_column;
 uint8_t terminal_color;
@@ -76,12 +65,13 @@ void terminal_initialize(void)
 {
 	terminal_row = 0;
 	terminal_column = 0;
-	terminal_color = vga_entry_color(VGA_COLOR_LIGHT_GREY, VGA_COLOR_BLACK);
+	terminal_color = vga_entry_color(VGA_COLOR_LIGHT_GREEN, VGA_COLOR_BLACK);
 	
 	for (size_t y = 0; y < VGA_HEIGHT; y++) {
 		for (size_t x = 0; x < VGA_WIDTH; x++) {
 			const size_t index = y * VGA_WIDTH + x;
 			terminal_buffer[index] = vga_entry(' ', terminal_color);
+			new_buff[index] = vga_entry(' ', terminal_color);
 		}
 	}
 }
@@ -91,16 +81,29 @@ void terminal_setcolor(uint8_t color)
 	terminal_color = color;
 }
 
+int isprintable(char c){
+	return (c > 32 && c < 127);
+}
+
 void terminal_putentryat(char c, uint8_t color, size_t x, size_t y) 
 {
 	const size_t index = y * VGA_WIDTH + x;
-	terminal_buffer[index] = vga_entry(c, color);
+	if(isprintable(c)){
+		terminal_buffer[index] = vga_entry(c, color);
+		if(terminal_row > 1)
+			new_buff[index] = vga_entry(c, color);
+	}
 }
+
+// void strcpy(char *dest, const char *src){
+// 	for
+// }
+// void scroll(char *term, )
 
 void terminal_putchar(char c) 
 {
 	terminal_putentryat(c, terminal_color, terminal_column, terminal_row);
-	if (++terminal_column == VGA_WIDTH) {
+	if (++terminal_column == VGA_WIDTH || c == '\n') {
 		terminal_column = 0;
 		if (++terminal_row == VGA_HEIGHT)
 			terminal_row = 0;
@@ -124,5 +127,5 @@ void kernel_main(void)
 	terminal_initialize();
 
 	/* Newline support is left as an exercise. */
-	terminal_writestring("42");
+	terminal_writestring("42\nsalut\r\t\v");
 }
