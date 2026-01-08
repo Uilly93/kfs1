@@ -1,0 +1,24 @@
+FROM debian:latest
+
+# Installation des outils une fois pour toutes
+RUN apt-get update && apt-get install -y \
+    grub-pc-bin \
+    grub-common \
+    xorriso \
+    mtools \
+    libisoburn1 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Dossier de travail
+WORKDIR /os
+
+# Commande par défaut qui sera exécutée au "docker run"
+# Elle utilise le volume monté pour créer l'ISO
+ENTRYPOINT ["/bin/sh", "-c"]
+
+# On définit les arguments par défaut (modifiables au run)
+CMD ["mkdir -p isodir/boot/grub && \
+cp kfs1.bin isodir/boot/ && \
+cp src/grub.cfg isodir/boot/grub/ && \
+grub-mkrescue -o kfs1.iso isodir && \
+rm -rf isodir"]
