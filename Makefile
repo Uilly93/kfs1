@@ -1,95 +1,36 @@
-# #commande a lancer pour creer myos.bin
-# docker run --rm -v "$(pwd)":/root/env -w /root/env debian:latest sh -c "chmod +x build.sh && ./build.sh"
-# #lancer l'os
-# qemu-system-i386 -kernel myos.bin
-#NASM
-#gcc-m32
-# NAME = myos.iso
-# CC = gcc
-# SRC_DIR = src
-# OBJ_DIR = obj
-# SRC_C = kernel.c
-# AS = boot
-# NASM_BOOT = $(SRC_DIR)/$(AS_SRC).s -o $(OBJ_DIR)/$(AS).o
-# SRC_LD = linker.ld
-# OBJS = $(addprefix $(OBJ_DIR)/,$(SRC_NAME:%.c=%.o))
-# SRC = $(addprefix $(SRC_DIR)/,$(SRC_NAME))
-# CFLAGS = -m32 -std=gnu99 -ffreestanding -O2 -Wall -Wextra \
-# 		-ffreestanding -O2 -nostdlib -fno-builtin \
-# 		-fno-exceptions -fno-stack-protector -nostdlib \
-# 		-nodefaultlibs -fno-pie
-# RM = rm -rf
+IMG = myos.bin
+ASM_SRC = boot.s
+C_SRC = kernel.c libft/memcpy.c libft/memmove.c libft/strlen.c libft/memset.c
+CFLAGS = -m32  -c -fno-builtin -fno-stack-protector -nostdlib -nodefaultlibs -Wall -Werror -Wextra
+OBJ = boot.o kernel.o libft/memcpy.o libft/memmove.o libft/strlen.o libft/memset.o
 
-# all: $(NAME)
+all: $(IMG)
 
-# $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
-# 	@mkdir -p $(OBJ_DIR)
-# 	$(CC) $(CFLAGS) -c $< -o $@
+$(IMG): $(OBJ)
+	gcc -m32 -T linker.ld -o $(IMG) -ffreestanding -nostdlib $(OBJ)
 
-# $(NAME): $(OBJS)
-# 	$(NASM_BOOT)
-# 	$(CC) $(CFLAGS) -o $(NAME) $(OBJS)
-# 	gcc -m32 -T $(SRC_DIR)/linker.ld -o myos.bin -ffreestanding -O2 -nostdlib $(OBJ_DIR)/boot.o $(OBJ_DIR)/kernel.o -lgcc -no-pie
-# 	docker build -t iso_gen $(SRC_DIR)
-# 	docker run --rm -v "$(pwd)":/os iso_gen
+boot.o: boot.s
+	nasm -f elf32 boot.s -o boot.o
 
-# clean: 
-# 	$(RM) .obj
+kernel.o: kernel.c
+	gcc $(CFLAGS) kernel.c -o kernel.o
 
-# fclean: clean
-# 	$(RM) src/myos.bin
+libft/memcpy.o: libft/memcpy.c
+	gcc $(CFLAGS) libft/memcpy.c -o libft/memcpy.o
 
-NAME        = kfs1.iso
-BIN         = kfs1.bin
-CC          = gcc
-AS          = gcc
-SRC_DIR     = src
-OBJ_DIR     = .obj
+libft/memmove.o: libft/memmove.c
+	gcc $(CFLAGS) libft/memmove.c -o libft/memmove.o
 
-# Flags de compilation (ajout de -fno-pie pour éviter les erreurs d'adressage)
-CFLAGS      = -m32 -std=gnu99 -ffreestanding -O2 -Wall -Wextra -fno-pie -nostdlib
-ASFLAGS     = -m32 -c
-LDFLAGS     = -m32 -T -lgcc $(SRC_DIR)/linker.ld -ffreestanding -O2 -nostdlib -lgcc -no-pie
+libft/strlen.o: libft/strlen.c
+	gcc $(CFLAGS) libft/strlen.c -o libft/strlen.o
 
-# Fichiers
-SRCS_C      = $(SRC_DIR)/kernel.c
-SRCS_S      = $(SRC_DIR)/boot.s
-OBJS        = $(OBJ_DIR)/kernel.o $(OBJ_DIR)/boot.o
+libft/memset.o: libft/memset.c
+	gcc $(CFLAGS) libft/memset.c -o libft/memset.o
 
-RM          = rm -rf
+clean: 
+	rm -f $(OBJ) $(IMG)
 
-all: $(NAME)
+run: $(IMG)
+	qemu-system-i386 -kernel $(IMG)
 
-# 1. Compilation du binaire kernel
-$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
-	@mkdir -p $(OBJ_DIR)
-	$(CC) $(CFLAGS) -c $< -o $@
-
-$(OBJ_DIR)/%.o: $(SRC_DIR)/%.s
-	@mkdir -p $(OBJ_DIR)
-	$(AS) $(ASFLAGS) $< -o $@
-
-$(BIN): $(OBJS)
-	@docker run --rm -v "$$(pwd)"\
-	:/root/env -w /root/env debian:latest \
-	sh -c "apt-get update && apt-get install -y gcc-i686-linux-gnu binutils-i686-linux-gnu &&\
-	i686-linux-gnu-gcc -T src/linker.ld -o kfs1.bin \
-	-ffreestanding -O2 -nostdlib boot.o kernel.o -lgcc -no-pie\
-	"
-
-# 2. Création de l'ISO via Docker (on réutilise l'image iso_gen)
-$(NAME): $(BIN)
-	@docker build -t iso_gen $(SRC_DIR)
-	@docker run --rm -v "$$(pwd)":/os iso_gen
-
-boot: $(NAME)
-	qemu-system-i386 -cdrom $(NAME)
-
-clean:
-	$(RM) $(OBJ_DIR)
-	docker system prune -a --volumes -f
-
-fclean: clean
-	$(RM) $(BIN) $(NAME)
-
-re: fclean all
+.PHONY: all clean run
