@@ -5,7 +5,7 @@ SRC_DIR     = src
 OBJ_DIR     = .obj
 CFLAGS      = -m32 -std=gnu99 -ffreestanding -O2 -Wall -Wextra -fno-pie -nostdlib
 ASFLAGS     = -m32 -c
-SRCS_C      = kernel.c
+SRCS_C      = kernel.c lib.c
 OBJS        = $(addprefix $(OBJ_DIR)/,$(SRCS_C:%.c=%.o)) $(OBJ_DIR)/boot.o
 RM          = rm -rf
 
