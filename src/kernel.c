@@ -122,10 +122,38 @@ void terminal_writestring(const char* data)
 
 static int is_extended = 0;
 
+// void handle_cursor(void){
+
+// }
+
+void handle_backscape(unsigned char c)
+{
+	if(c == 0x0E)
+	{
+		if (terminal_column == 0 && terminal_row == 0)
+			return;
+		else if(terminal_column > 0)
+			terminal_column -= 1;
+		else if (terminal_column == 0 && terminal_row > 0){
+			terminal_row -= 1;
+			terminal_column = 79;
+			while (terminal_column > 0 && 
+          (terminal_buffer[terminal_row * 80 + terminal_column] & 0xFF) == ' '){
+				terminal_column--;
+		  }
+			terminal_column++;
+		}
+		uint16_t *location = terminal_buffer + (terminal_row * 80 + terminal_column);
+		*location = (uint16_t) (0x07 << 8) | ' ';
+		update_cursor(terminal_column, terminal_row);
+	}
+}
+
+
 void terminal_write_inputs(void){
 	if(inb(0x64) & 1){
-		unsigned char c = inb(0x60);
-
+		const unsigned char c = inb(0x60);
+		handle_backscape(c);
 		if(c == 0xE0){
 			is_extended = 1;
 			return;
@@ -134,10 +162,18 @@ void terminal_write_inputs(void){
 		{
 			is_extended = 0;
 			switch (c) {
-				case 0x48: terminal_row--;    break; // up
-				case 0x50: terminal_row++;    break; // down
-				case 0x4B: terminal_column--; break; // left
-				case 0x4D: terminal_column++; break; // right
+				case 0x48: 
+					terminal_row--;
+					break; // up
+				case 0x50:
+					terminal_row++;
+					break; // down
+				case 0x4B:
+					terminal_column--;
+					break; // left
+				case 0x4D:
+					terminal_column++;
+					break; // right
 			}
 			update_cursor(terminal_column, terminal_row);
 		}
@@ -150,10 +186,8 @@ void kernel_main(void)
 {
 	/* Initialize terminal interface */
 	terminal_initialize();
-
 	/* Newline support is left as an exercise. */
 	terminal_writestring("42\n");
-
 	while(1){
 		terminal_write_inputs();
 	}
