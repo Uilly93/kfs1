@@ -53,5 +53,5 @@ size_t ft_strlen(const char* str)
 }
 
 int isprintable(char c){
-	return (c > 32 && c < 127);
+	return (c > 31 && c < 127);
 }

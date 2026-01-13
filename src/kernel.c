@@ -1,4 +1,5 @@
 #include "../includes/kernel.h"
+#include <stddef.h>
 
 /* Check if the compiler thinks you are targeting the wrong operating system. */
 #if defined(__linux__)
@@ -28,6 +29,13 @@ enum vga_color {
 	VGA_COLOR_LIGHT_MAGENTA = 13,
 	VGA_COLOR_LIGHT_BROWN = 14,
 	VGA_COLOR_WHITE = 15,
+};
+
+enum t_dir {
+	UP,
+	DOWN,
+	LEFT,
+	RIGHT
 };
 
 static inline uint8_t vga_entry_color(enum vga_color fg, enum vga_color bg) 
@@ -120,65 +128,125 @@ void terminal_writestring(const char* data)
 	terminal_write(data, ft_strlen(data));
 }
 
-static int is_extended = 0;
+void directionnal_cross_boundary(enum t_dir dir){
+	if(dir == UP && terminal_row > 0){
+		if(terminal_column > 0 && (terminal_buffer[(terminal_row - 1) * 80 + terminal_column] & 0xFF) != ' '){
+			terminal_row--;
+		}
+		else{
+			terminal_row--;
+			terminal_column = 79;
+			while (terminal_column > 0 && (terminal_buffer[terminal_row * 80 + terminal_column] & 0xFF) == ' '){
+				terminal_column--;
+			}
+			if((terminal_buffer[terminal_row * 80 + terminal_column] & 0xFF) != ' ')
+				terminal_column++;
+		}
+	}
+	else if(dir == DOWN && terminal_row < 24){
+		if(terminal_column > 0 && (terminal_buffer[(terminal_row + 1) * 80 + terminal_column] & 0xFF) != ' '){
+			terminal_row++;
+		}
+		else{
+			terminal_row++;
+			terminal_column = 79;
+			while (terminal_column > 0 && (terminal_buffer[terminal_row * 80 + terminal_column] & 0xFF) == ' '){
+				terminal_column--;
+			}
+			if((terminal_buffer[terminal_row * 80 + terminal_column] & 0xFF) != ' ')
+				terminal_column++;
+		}
+	}
+	else if (dir == RIGHT){
+		size_t boundary = 79;
+		while (boundary > 0 && (terminal_buffer[terminal_row * 80 + boundary] & 0xFF) == ' ') {
+				boundary--;
+		}
+		if (terminal_column <= boundary && terminal_column < 79) {
+				terminal_column++;
+		}
+	}
+	else if (dir == LEFT){
+		if (terminal_column == 0 && terminal_row == 0)
+			return;
+		if(terminal_column == 0 && terminal_row > 0){
+			terminal_row--;
+			terminal_column = 79;
+			while (terminal_column > 0 && (terminal_buffer[terminal_row * 80 + terminal_column] & 0xFF) == ' '){
+				terminal_column--;
+			}
+			terminal_column++;
+		}
+		else
+			terminal_column--;
+	}
+}
 
-// void handle_cursor(void){
-
-// }
+void escape_whitespaces(){
+	if (terminal_column == 0 && terminal_row == 0)
+		return;
+	else if(terminal_column > 0)
+		terminal_column -= 1;
+	else if (terminal_column == 0 && terminal_row > 0){
+		terminal_row -= 1;
+		terminal_column = 79;
+		while (terminal_column > 0 && (terminal_buffer[terminal_row * 80 + terminal_column] & 0xFF) == ' '){
+			terminal_column--;
+		}
+		terminal_column++;
+	}
+}
 
 void handle_backscape(unsigned char c)
 {
 	if(c == 0x0E)
 	{
-		if (terminal_column == 0 && terminal_row == 0)
-			return;
-		else if(terminal_column > 0)
-			terminal_column -= 1;
-		else if (terminal_column == 0 && terminal_row > 0){
-			terminal_row -= 1;
-			terminal_column = 79;
-			while (terminal_column > 0 && 
-          (terminal_buffer[terminal_row * 80 + terminal_column] & 0xFF) == ' '){
-				terminal_column--;
-		  }
-			terminal_column++;
-		}
+		escape_whitespaces();
 		uint16_t *location = terminal_buffer + (terminal_row * 80 + terminal_column);
 		*location = (uint16_t) (0x07 << 8) | ' ';
 		update_cursor(terminal_column, terminal_row);
 	}
 }
 
+static int is_extended = 0;
+
+void handle_cursor(unsigned char c){
+	if(c == 0xE0){
+		is_extended = 1;
+		return;
+	}
+	if(is_extended)
+	{
+		is_extended = 0;
+		switch (c) {
+			case 0x48: 
+				directionnal_cross_boundary(UP);
+				break; // up
+			case 0x50:
+				directionnal_cross_boundary(DOWN);
+				break; // down
+			case 0x4B:
+				directionnal_cross_boundary(LEFT);
+				break; // left
+			case 0x4D:
+				directionnal_cross_boundary(RIGHT);
+				break; // right
+		}
+		update_cursor(terminal_column, terminal_row);
+	}
+}
+
+void handle_typing(unsigned char c){
+	if(!(c & 0x80) && c < sizeof(kbd_qwerty))
+		terminal_putchar(kbd_qwerty[c]);
+}
 
 void terminal_write_inputs(void){
 	if(inb(0x64) & 1){
 		const unsigned char c = inb(0x60);
 		handle_backscape(c);
-		if(c == 0xE0){
-			is_extended = 1;
-			return;
-		}
-		if(is_extended)
-		{
-			is_extended = 0;
-			switch (c) {
-				case 0x48: 
-					terminal_row--;
-					break; // up
-				case 0x50:
-					terminal_row++;
-					break; // down
-				case 0x4B:
-					terminal_column--;
-					break; // left
-				case 0x4D:
-					terminal_column++;
-					break; // right
-			}
-			update_cursor(terminal_column, terminal_row);
-		}
-		else if(!(c & 0x80) && c < sizeof(kbd_qwerty))
-			terminal_putchar(kbd_qwerty[c]);
+		handle_cursor(c);
+		handle_typing(c);
 	}
 }
 
