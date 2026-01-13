@@ -114,7 +114,7 @@ void terminal_putchar(char c)
 		if (terminal_row == VGA_HEIGHT)
 			terminal_scroll();
 	}
-	update_cursor(terminal_column, terminal_row);
+	// update_cursor(terminal_column, terminal_row);
 }
 
 void terminal_write(const char* data, size_t size) 
@@ -162,7 +162,9 @@ void directionnal_cross_boundary(enum t_dir dir){
 		while (boundary > 0 && (terminal_buffer[terminal_row * 80 + boundary] & 0xFF) == ' ') {
 				boundary--;
 		}
-		if (terminal_column <= boundary && terminal_column < 79) {
+		if((terminal_buffer[terminal_row * 80 + boundary] & 0xFF) != ' ')
+			boundary++;
+		if (terminal_column < boundary && terminal_column < 79) {
 				terminal_column++;
 		}
 	}
@@ -204,7 +206,6 @@ void handle_backscape(unsigned char c)
 		escape_whitespaces();
 		uint16_t *location = terminal_buffer + (terminal_row * 80 + terminal_column);
 		*location = (uint16_t) (0x07 << 8) | ' ';
-		update_cursor(terminal_column, terminal_row);
 	}
 }
 
@@ -232,7 +233,7 @@ void handle_cursor(unsigned char c){
 				directionnal_cross_boundary(RIGHT);
 				break; // right
 		}
-		update_cursor(terminal_column, terminal_row);
+		// update_cursor(terminal_column, terminal_row);
 	}
 }
 
@@ -247,6 +248,7 @@ void terminal_write_inputs(void){
 		handle_backscape(c);
 		handle_cursor(c);
 		handle_typing(c);
+		update_cursor(terminal_column, terminal_row);
 	}
 }
 
