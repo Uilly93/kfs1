@@ -46,6 +46,11 @@ void switch_screen(u_int8_t index) {
 
 void screen_putchar(char c) 
 {
+	if (c == '\n')
+	{
+		enter();
+		return;
+	}
 	const size_t index = screens[current_screen].term_row * VGA_WIDTH + screens[current_screen].term_column;
 	screens[current_screen].buffer[index] = vga_entry(c, screens[current_screen].term_color);
 	if (++screens[current_screen].term_column == VGA_WIDTH || c == '\n')
@@ -61,13 +66,4 @@ void screen_putchar(char c)
 		}
 	}
 	update_cursor(screens[current_screen].term_column, screens[current_screen].term_row);
-}
-
-void terminal_write(const char* data) 
-{
-	size_t len = strlen(data);
-	for (size_t i = 0; i < len; i++)
-		screen_putchar(data[i]);
-	memset(terminal_buffer, ' ', VGA_LEN);
-	memcpy(terminal_buffer, &screens[current_screen].buffer, VGA_LEN);
 }

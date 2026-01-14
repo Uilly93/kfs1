@@ -5,6 +5,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <sys/types.h>
+#include <stdarg.h>
 #include "vga.h"
 
 
@@ -41,6 +42,7 @@ static inline void outb(unsigned short port, unsigned char val) {
     asm volatile ( "outb %0, %1" : : "a"(val), "Nd"(port) );
 }
 
+int		ft_printf(const char *s, ...);
 void	*memset(void *s, int c, size_t n);
 void	*ft_memmove(void *dest, const void *src, size_t n);
 void	*memcpy(void *dest, const void *src, size_t n);
@@ -55,7 +57,6 @@ void	set_cursor_color(uint8_t screen_index, vga_color bg, vga_color fg);
 void	backspace();
 void	enter();
 void	screen_putchar(char c);
-void	terminal_write(const char* data);
 void	cursor_up();
 void	cursor_down();
 void	cursor_left();

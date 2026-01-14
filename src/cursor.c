@@ -34,10 +34,8 @@ void update_cursor(uint8_t x, uint8_t y)
 	outb(0x3D4, 0x0E);
 	outb(0x3D5, (uint8_t) ((screens[current_screen].cursor_pos >> 8) & 0xFF));
 
-	if (prev_pos != pos) {
-		char prev_char = screens[current_screen].buffer[prev_pos] & 0xFF;  
-		screens[current_screen].buffer[prev_pos] = vga_entry(prev_char, screens[current_screen].term_color);
-	}
+	char prev_char = screens[current_screen].buffer[prev_pos] & 0xFF;  
+	screens[current_screen].buffer[prev_pos] = vga_entry(prev_char, screens[current_screen].term_color);
 	char new_char = screens[current_screen].buffer[pos] & 0xFF;  
 	screens[current_screen].buffer[pos] = vga_entry(new_char, screens[current_screen].cursor_color);
 }
@@ -56,6 +54,7 @@ void cursor_up(){
 			if((terminal_buffer[screens[current_screen].term_row * 80 + screens[current_screen].term_column] & 0xFF) != ' ')
 				screens[current_screen].term_column++;
 		}
+		update_cursor(screens[current_screen].term_column, screens[current_screen].term_row);
 	}
 }
 
@@ -73,6 +72,7 @@ void cursor_down() {
 			if((terminal_buffer[screens[current_screen].term_row * 80 + screens[current_screen].term_column] & 0xFF) != ' ')
 				screens[current_screen].term_column++;
 		}
+		update_cursor(screens[current_screen].term_column, screens[current_screen].term_row);
 	}
 }
 
@@ -86,6 +86,7 @@ void cursor_right() {
 		if (screens[current_screen].term_column < boundary && screens[current_screen].term_column < 79) {
 				screens[current_screen].term_column++;
 		}
+		update_cursor(screens[current_screen].term_column, screens[current_screen].term_row);
 }
 
 void cursor_left() {
@@ -101,6 +102,7 @@ void cursor_left() {
 		}
 		else
 			screens[current_screen].term_column--;
+		update_cursor(screens[current_screen].term_column, screens[current_screen].term_row);
 }
 
 void backspace() {

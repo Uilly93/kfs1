@@ -41,25 +41,30 @@ void kernel_main(void)
 	/* Initialize terminal interface */
 	screen_init();
 
-	terminal_write("Hello, kernel World!");
+	ft_printf("Hello, kernel World!\n");
+	//ft_printf("%c\ndjhfjdhf\n", 'o');
+	//ft_printf("%d\n", 42);
+	//ft_printf("%x\n", 42);
+	//ft_printf("%X\n", 42);
+	//ft_printf("%p\n", VGA_MEMORY);
 	while(0xcafe) {
 		if (inb(0x64) & 1)
 		{
 			uint8_t scancode = inb(0x60);
 			
-			if (scancode & 0x80)
-				continue;
-			//handle_cursor(scancode);
-
+			handle_cursor(scancode);
 			switch (scancode) {
 				case 0x3B: //f1
 					switch_screen(0);
+	//				ft_printf("Hello screen %d \n", current_screen + 1);
 					break;
 				case 0x3C: //f2
 					switch_screen(1);
+	//				ft_printf("Hello screen %d \n", current_screen + 1);
 					break;
 				case 0x3D: //f3
 					switch_screen(2);
+	//				ft_printf("Hello screen %d \n", current_screen + 1);
 					break;
 			}
 			if (scancode < sizeof(scancode_to_ascii))
@@ -70,17 +75,15 @@ void kernel_main(void)
 					case 27: continue;
 					case 8:
 						backspace();
-						memcpy(terminal_buffer, &screens[current_screen].buffer, VGA_LEN);
 						continue; // backspace
 					case 10: 
 						enter();
-						memcpy(terminal_buffer, &screens[current_screen].buffer, VGA_LEN);
 						continue; // carriage return
 					default: 
 						screen_putchar(c);
-						memcpy(terminal_buffer, &screens[current_screen].buffer, VGA_LEN);
 				}
 			}
+			memcpy(terminal_buffer, &screens[current_screen].buffer, VGA_LEN);
 		}
 	}
 }
