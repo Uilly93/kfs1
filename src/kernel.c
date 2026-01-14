@@ -41,7 +41,7 @@ void kernel_main(void)
 	/* Initialize terminal interface */
 	screen_init();
 
-	ft_printf("Hello, kernel World!\n");
+	ft_printf("%d\n", 42);
 	//ft_printf("%c\ndjhfjdhf\n", 'o');
 	//ft_printf("%d\n", 42);
 	//ft_printf("%x\n", 42);
