@@ -48,6 +48,7 @@ void kernel_main(void)
 	//ft_printf("%X\n", 42);
 	//ft_printf("%p\n", VGA_MEMORY);
 	while(0xcafe) {
+		memcpy(terminal_buffer, &screens[current_screen].buffer, VGA_LEN);
 		if (inb(0x64) & 1)
 		{
 			uint8_t scancode = inb(0x60);
@@ -83,7 +84,6 @@ void kernel_main(void)
 						screen_putchar(c);
 				}
 			}
-			memcpy(terminal_buffer, &screens[current_screen].buffer, VGA_LEN);
 		}
 	}
 }
