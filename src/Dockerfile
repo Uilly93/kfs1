@@ -13,7 +13,7 @@ WORKDIR /os
 ENTRYPOINT ["/bin/sh", "-c"]
 
 CMD ["mkdir -p isodir/boot/grub && \
-cp .obj/kfs1.bin isodir/boot/ && \
+cp .obj/kfs.bin isodir/boot/ && \
 cp src/grub.cfg isodir/boot/grub/ && \
-grub-mkrescue -o kfs1.iso isodir && \
+grub-mkrescue -o kfs.iso isodir && \
 rm -rf isodir"]

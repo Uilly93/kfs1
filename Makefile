@@ -1,5 +1,5 @@
-NAME        = kfs1.iso
-BIN         = kfs1.bin
+NAME        = kfs.iso
+BIN         = kfs.bin
 CC          = gcc
 SRC_DIR     = src
 OBJ_DIR     = .obj
