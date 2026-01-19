@@ -1,34 +1,34 @@
 #include "kernel.h"
+#include "vga.h"
 
-void screen_init(void) {
-	screens[0].term_row = 0;	
-	screens[0].term_column = 0;
-	set_terminal_color(0, BLACK, LIGHT_GREY);
-	set_cursor_color(0, LIGHT_GREY, BLACK);
-	screens[0].cursor_pos = 0;
+void init_screen(int index)
+{
+	int old_screen = current_screen;
+    current_screen = index;
+	screens[index].term_row = 24;	
+	screens[index].term_column = 7;
+	set_terminal_color(index, BLACK, LIGHT_GREY);
+	set_cursor_color(index, LIGHT_GREY, BLACK);
+	screens[index].cursor_pos = index;
 	for (uint16_t j = 0; j < VGA_LEN; j++)
 	{
-		screens[0].buffer[j] = vga_entry(' ', screens[0].term_color);
+		screens[index].buffer[j] = vga_entry(' ', screens[index].term_color);
 	}
-	
-	screens[1].term_row = 0;	
-	screens[1].term_column = 0;
-	set_terminal_color(1, LIGHT_GREY, BLACK);
-	set_cursor_color(1, BLACK, LIGHT_GREY);
-	screens[1].cursor_pos = 0;
-	for (uint16_t j = 0; j < VGA_LEN; j++)
-	{
-		screens[1].buffer[j] = vga_entry(' ', screens[1].term_color);
+	char prompt[6] = "KFS2 >";
+	for(int i = 0; i < 6 ;i++){
+		screens[index].buffer[(VGA_HEIGHT - 1) * VGA_WIDTH + i] = vga_entry(prompt[i], LIGHT_BLUE);
 	}
+	print_kfs_logo();
+	ft_printf(0, "%d Kfs | screen: %d", 42, current_screen + 1);
+	current_screen = old_screen;
+ 	update_cursor(screens[index].term_column, screens[index].term_row);
+}
 
-	screens[2].term_row = 0;	
-	screens[2].term_column = 0;
-	set_terminal_color(2, BLUE, LIGHT_GREY);
-	set_cursor_color(2, LIGHT_GREY, BLUE);
-	screens[2].cursor_pos = 0;
-	for (uint16_t j = 0; j < VGA_LEN; j++)
-	{
-		screens[2].buffer[j] = vga_entry(' ', screens[2].term_color);
+void screen_multi_init(void)
+{
+	char prompt[6] = "KFS2 >";
+	for(int i = 0; i < MAX_SCREEN; i++){
+		init_screen(i);
 	}
 }
 
@@ -44,26 +44,32 @@ void switch_screen(u_int8_t index) {
  	update_cursor(screens[current_screen].term_column, screens[current_screen].term_row);
 }
 
-void screen_putchar(char c) 
+void screen_putchar(char c, int16_t *idx) 
 {
-	if (c == '\n')
+	if(c == '\n')
 	{
 		enter();
 		return;
+		// ft_memmove(screens[current_screen].buffer, screens[current_screen].buffer + 80, VGA_SCROLL);
+		// for (int x = 0; x < VGA_WIDTH; x++) {
+		// 	screens[current_screen].buffer[(VGA_HEIGHT - 1) * VGA_WIDTH + x] = (uint16_t)' ';
+		// }
+		// screens[current_screen].term_column = 7;
+		// screens[current_screen].term_row = 24;
+		// update_cursor(screens[current_screen].term_column, screens[current_screen].term_row);
 	}
-	const size_t index = screens[current_screen].term_row * VGA_WIDTH + screens[current_screen].term_column;
-	screens[current_screen].buffer[index] = vga_entry(c, screens[current_screen].term_color);
-	if (++screens[current_screen].term_column == VGA_WIDTH || c == '\n')
+	if (screens[current_screen].term_column == VGA_WIDTH - 1)
+		return ;
+	int16_t index = *idx;
+	if(index == -1)
 	{
-		screens[current_screen].term_column = 0;
-		if (++screens[current_screen].term_row == VGA_HEIGHT)
-		{
-			ft_memmove(screens[current_screen].buffer, screens[current_screen].buffer + 80, VGA_SCROLL);
-			for (int x = 0; x < VGA_WIDTH; x++) {
-				screens[current_screen].buffer[(VGA_HEIGHT - 1) * VGA_WIDTH + x] = (uint16_t)' ';
-            }
-			screens[current_screen].term_row = VGA_HEIGHT -1;
-		}
+		index = screens[current_screen].term_row * VGA_WIDTH + screens[current_screen].term_column;
+		screens[current_screen].buffer[index] = vga_entry(c, screens[current_screen].term_color);
+		screens[current_screen].term_column++;
+		update_cursor(screens[current_screen].term_column, screens[current_screen].term_row);
+		return;
 	}
-	update_cursor(screens[current_screen].term_column, screens[current_screen].term_row);
+	index = *idx;
+	screens[current_screen].buffer[index] = vga_entry(c, screens[current_screen].term_color);
+	*idx += 1;
 }

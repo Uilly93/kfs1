@@ -42,7 +42,7 @@ static inline void outb(unsigned short port, unsigned char val) {
     asm volatile ( "outb %0, %1" : : "a"(val), "Nd"(port) );
 }
 
-int		ft_printf(const char *s, ...);
+int		ft_printf(int16_t, const char *s, ...);
 void	*memset(void *s, int c, size_t n);
 void	*ft_memmove(void *dest, const void *src, size_t n);
 void	*memcpy(void *dest, const void *src, size_t n);
@@ -51,16 +51,17 @@ void	enable_cursor(uint8_t cursor_start, uint8_t cursor_end);
 void	disable_cursor();
 void	update_cursor(uint8_t x, uint8_t y);
 void	switch_screen(u_int8_t index);
-void	screen_init(void);
+void    screen_multi_init(void);
 void	set_terminal_color(uint8_t screen_index, vga_color bg, vga_color fg);
 void	set_cursor_color(uint8_t screen_index, vga_color bg, vga_color fg);
 void	backspace();
 void	enter();
-void	screen_putchar(char c);
+void	screen_putchar(char c, int16_t *idx);
 void	cursor_up();
 void	cursor_down();
 void	cursor_left();
 void	cursor_right();
+void    print_kfs_logo();
 
 
 #endif 

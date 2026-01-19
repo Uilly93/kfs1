@@ -40,7 +40,7 @@ void update_cursor(uint8_t x, uint8_t y)
 	screens[current_screen].buffer[pos] = vga_entry(new_char, screens[current_screen].cursor_color);
 }
 
-void cursor_up(){
+void cursor_up(){ // vim mode
 	if (screens[current_screen].term_row > 0){
 		if(screens[current_screen].term_column > 0 && (terminal_buffer[(screens[current_screen].term_row - 1) * 80 + screens[current_screen].term_column] & 0xFF) != ' '){
 			screens[current_screen].term_row--;
@@ -58,7 +58,7 @@ void cursor_up(){
 	}
 }
 
-void cursor_down() {
+void cursor_down() { // vim mode
 	if (screens[current_screen].term_row < 24) {
 		if(screens[current_screen].term_column > 0 && (terminal_buffer[(screens[current_screen].term_row + 1) * 80 + screens[current_screen].term_column] & 0xFF) != ' '){
 			screens[current_screen].term_row++;
@@ -90,7 +90,7 @@ void cursor_right() {
 }
 
 void cursor_left() {
-		if (screens[current_screen].term_column == 0 && screens[current_screen].term_row == 0)
+		if ((screens[current_screen].term_column == 0 && screens[current_screen].term_row == 0) || screens[current_screen].term_column == 7) // vim mode
 			return;
 		if(screens[current_screen].term_column == 0 && screens[current_screen].term_row > 0){
 			screens[current_screen].term_row--;
@@ -109,23 +109,25 @@ void backspace() {
 	const size_t index = screens[current_screen].term_row * VGA_WIDTH + screens[current_screen].term_column -1;
 	if (index < VGA_LEN)
 		screens[current_screen].buffer[index] = vga_entry((uint16_t)' ', screens[current_screen].term_color);
-	if (screens[current_screen].term_column > 0 )
+	if (screens[current_screen].term_column > 7 )
 	{
 		screens[current_screen].term_column--;
 	}
-	else if (screens[current_screen].term_row > 0) {
-		screens[current_screen].term_row--;
-		screens[current_screen].term_column = VGA_WIDTH - 1;
-		while (screens[current_screen].term_column > 0 && 
-          (screens[current_screen].buffer[screens[current_screen].term_row * 80 + screens[current_screen].term_column] & 0xFF) == ' '){
-              screens[current_screen].term_column--;
-          }
-		screens[current_screen].term_column++;
-	}
+	// VIM mode
+	// else if (screens[current_screen].term_row > 7) {
+	// 	screens[current_screen].term_row--;
+	// 	screens[current_screen].term_column = VGA_WIDTH - 1;
+	// 	while (screens[current_screen].term_column > 0 && 
+    //       (screens[current_screen].buffer[screens[current_screen].term_row * 80 + screens[current_screen].term_column] & 0xFF) == ' '){
+    //           screens[current_screen].term_column--;
+    //       }
+	// 	screens[current_screen].term_column++;
+	// }
+	// VIM mode
 	update_cursor(screens[current_screen].term_column, screens[current_screen].term_row);
 }
 
-void enter() 
+void enter()
 {
     uint8_t next_row = screens[current_screen].term_row + 1;
     
@@ -133,15 +135,28 @@ void enter()
 		uint16_t prev_pos = screens[current_screen].cursor_pos;
         char prev_char = screens[current_screen].buffer[prev_pos] & 0xFF;
         screens[current_screen].buffer[prev_pos] = vga_entry(prev_char, screens[current_screen].term_color);
-        ft_memmove(screens[current_screen].buffer, screens[current_screen].buffer + VGA_WIDTH, VGA_SCROLL);
-        
+		uint16_t line_offset = VGA_WIDTH;
+		ft_memmove(screens[current_screen].buffer + line_offset, 
+           screens[current_screen].buffer + (line_offset * 2), 
+           (VGA_HEIGHT - 2) * VGA_WIDTH * 2); // On déplace (Total - 2) lignes
         for (int x = 0; x < VGA_WIDTH; x++) {
             screens[current_screen].buffer[(VGA_HEIGHT - 1) * VGA_WIDTH + x] = 
                 vga_entry(' ', screens[current_screen].term_color);
         }
         next_row = VGA_HEIGHT - 1;
+		update_cursor(7, next_row);
+		// prompt❯
+		char prompt[6] = "KFS2 >";
+		for(int i = 0; i < 6 ;i++){
+			screens[current_screen].buffer[(VGA_HEIGHT - 1) * VGA_WIDTH + i] = vga_entry(prompt[i], LIGHT_BLUE);
+	
+		}
+		screens[current_screen].term_column = 7;
+		screens[current_screen].term_row = next_row;
+		return;
     }
-    update_cursor(0, next_row);
-    screens[current_screen].term_column = 0;
-    screens[current_screen].term_row = next_row;
+	next_row = screens[current_screen].term_row + 1;
+	screens[current_screen].term_column = 0;
+	screens[current_screen].term_row = next_row;
+
 }
