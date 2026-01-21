@@ -3,7 +3,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#define COORD(x, y) ((y) * 80 + (x))
+
 #define TO_CURSOR -1
 uint8_t current_screen = 0;
 screen_t screens[MAX_SCREEN];
@@ -38,23 +38,23 @@ void handle_cursor(unsigned char c){
 }
 
 void print_kfs_logo() {
-	int16_t start = 80;
-	for(; start <= 800; start++)
-		screens[current_screen].buffer[start] = vga_entry(' ', screens[current_screen].term_color);
-	ft_printf(4 * 80,       "42  42  42424242  42424242");
-	ft_printf(5 * 80,       "42 42   42        42      ");
-	ft_printf(6 * 80,       "4242     424242    424242 ");
-	ft_printf(7 * 80,       "42 42   42              42");
-	ft_printf(8 * 80,       "42  42  42        42424242");
-	ft_printf(10 * 80, "System Kernel Loaded Successfully!\na");
+	// int16_t start = 80;
+	// for(; start <= 800; start++)
+	// 	screens[current_screen].buffer[start] = vga_entry(' ', screens[current_screen].term_color);
+	ft_printf(-1,       "42  42  42424242  42424242\n");
+	ft_printf(-1,       "42 42   42        42      \n");
+	ft_printf(-1,       "4242     424242    424242 \n");
+	ft_printf(-1,       "42 42   42              42\n");
+	ft_printf(-1,       "42  42  42        42424242\n");
+	ft_printf(-1, "System Kernel Loaded Successfully!\n");
 }
 
-void clear()
-{
-	uint16_t start = 80;
-	for(; start <= COORD(80, 24); start++)
-	screens[current_screen].buffer[start] = vga_entry(' ', screens[current_screen].term_color);
-}
+// void clear()
+// {
+// 	// uint16_t start = 80;
+// 	// for(; start <= COORD(80, 24); start++)
+// 	// screens[current_screen].buffer[start] = vga_entry(' ', screens[current_screen].term_color);
+// }
 
 void kernel_main(void)
 {

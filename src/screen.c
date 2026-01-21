@@ -46,8 +46,31 @@ void switch_screen(u_int8_t index) {
 
 void screen_putchar(char c, int16_t *idx) 
 {
+	const int TOP_LIMIT = 1;
+	const int BOTTOM_LIMIT = 23;
+	if (idx != NULL && *idx != -1) 
+    {
+        if (c == '\n') 
+            *idx = ((*idx / 80) + 1) * 80;
+        else {
+            screens[current_screen].buffer[*idx] = vga_entry(c, screens[current_screen].term_color);
+            (*idx)++;
+        }
+		if (*idx >= BOTTOM_LIMIT * VGA_WIDTH + VGA_WIDTH) {
+            ft_memmove(screens[current_screen].buffer + (TOP_LIMIT * VGA_WIDTH), 
+                       screens[current_screen].buffer + ((TOP_LIMIT + 1) * VGA_WIDTH), 
+                       (BOTTOM_LIMIT - TOP_LIMIT) * VGA_WIDTH * 2);
+
+            for (int x = 0; x < VGA_WIDTH; x++) {
+                screens[current_screen].buffer[BOTTOM_LIMIT * VGA_WIDTH + x] = 
+                    vga_entry(' ', screens[current_screen].term_color);
+            }
+            *idx -= 80; 
+        }
+        return;
+    }
 	if(c == '\n')
-	{
+	{		
 		enter();
 		return;
 		// ft_memmove(screens[current_screen].buffer, screens[current_screen].buffer + 80, VGA_SCROLL);
@@ -71,5 +94,6 @@ void screen_putchar(char c, int16_t *idx)
 	}
 	index = *idx;
 	screens[current_screen].buffer[index] = vga_entry(c, screens[current_screen].term_color);
+	update_cursor(screens[current_screen].term_column, screens[current_screen].term_row);
 	*idx += 1;
 }
