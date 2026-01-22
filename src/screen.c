@@ -7,7 +7,7 @@ void init_screen(int index)
     current_screen = index;
 	screens[index].term_row = 24;	
 	screens[index].term_column = 7;
-	set_terminal_color(index, BLACK, LIGHT_GREY);
+	set_terminal_color(index, BLACK, LIGHT_GREY, GREEN);
 	set_cursor_color(index, LIGHT_GREY, BLACK);
 	screens[index].cursor_pos = index;
 	for (uint16_t j = 0; j < VGA_LEN; j++)
@@ -16,7 +16,7 @@ void init_screen(int index)
 	}
 	char prompt[6] = "KFS2 >";
 	for(int i = 0; i < 6 ;i++){
-		screens[index].buffer[(VGA_HEIGHT - 1) * VGA_WIDTH + i] = vga_entry(prompt[i], LIGHT_BLUE);
+		screens[index].buffer[(VGA_HEIGHT - 1) * VGA_WIDTH + i] = vga_entry(prompt[i], screens[index].prompt_color);
 	}
 	print_kfs_logo();
 	ft_printf(0, "%d Kfs | screen: %d", 42, current_screen + 1);
@@ -26,15 +26,35 @@ void init_screen(int index)
 
 void screen_multi_init(void)
 {
-	char prompt[6] = "KFS2 >";
+	// char prompt[6] = "KFS2 >";
 	for(int i = 0; i < MAX_SCREEN; i++){
 		init_screen(i);
 	}
 }
 
-void set_terminal_color(uint8_t screen_index, vga_color bg, vga_color fg) 
+void set_terminal_color(uint8_t screen_index, vga_color bg, vga_color fg, vga_color prompt) 
 {
-	screens[screen_index].term_color = (bg << 4) | fg;
+    screens[screen_index].term_color = (bg << 4) | fg;
+    screens[screen_index].prompt_color = (bg << 4) | prompt;
+    for (int r = 0; r < VGA_HEIGHT; r++)
+    {
+        int row_start = r * VGA_WIDTH;
+        char line_start[7] = {0};
+
+        for (int j = 0; j < 6; j++) {
+            line_start[j] = (char)(screens[screen_index].buffer[row_start + j] & 0xFF);
+        }
+        int is_prompt_line = (ft_strncmp(line_start, "KFS2 >", 6) == 0);
+        for (int c = 0; c < VGA_WIDTH; c++)
+        {
+            int i = row_start + c;
+            char entry = (char)(screens[screen_index].buffer[i] & 0xFF);
+            if (is_prompt_line && c < 6)
+                screens[screen_index].buffer[i] = vga_entry(entry, screens[screen_index].prompt_color);
+            else
+                screens[screen_index].buffer[i] = vga_entry(entry, screens[screen_index].term_color);
+        }
+    }
 }
 
 void switch_screen(u_int8_t index) {

@@ -47,6 +47,7 @@ void print_kfs_logo() {
 	ft_printf(-1,       "42 42   42              42\n");
 	ft_printf(-1,       "42  42  42        42424242\n");
 	ft_printf(-1, "System Kernel Loaded Successfully!\n");
+	// set_terminal_color(current_screen, WHITE, BLACK, RED);
 }
 
 // void clear()

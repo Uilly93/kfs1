@@ -59,8 +59,8 @@ static int	ft_putnbr_base_long(unsigned long nb, char *base, int16_t *idx)
 	i = 0;
 	while (nb > 0)
 	{
-		result[i] = base[nb % strlen(base)];
-		nb /= strlen(base);
+		result[i] = base[nb % ft_strlen(base)];
+		nb /= ft_strlen(base);
 		i++;
 	}
 	len = i;
@@ -88,8 +88,8 @@ static int	ft_putnbr_base(unsigned int nb, char *base, int16_t *idx)
 	// }
 	while (nb > 0)
 	{
-		result[i] = base[nb % strlen(base)];
-		nb /= strlen(base);
+		result[i] = base[nb % ft_strlen(base)];
+		nb /= ft_strlen(base);
 		i++;
 	}
 	len = i;
@@ -125,7 +125,7 @@ static int	ft_is_s(const char *s, int16_t *idx)
 	}
 	else
 		ft_putstr((char *)s, idx);
-	return (strlen((char *)s));
+	return (ft_strlen((char *)s));
 }
 
 static int	ft_is_u(unsigned int nb, int16_t *idx)
@@ -205,6 +205,6 @@ int ft_printf(int16_t idx, const char *s, ...)
 		}
 	}
 	va_end(args);
-	//ft_memmove(terminal_buff, buffer, strlen((char *)buffer));
+	//ft_memmove(terminal_buff, buffer, ft_strlen((char *)buffer));
 	return (len);
 }

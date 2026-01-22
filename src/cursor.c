@@ -159,18 +159,100 @@ void reboot()
     outb(0x64, 0xFE);
 }
 
-void echo(char *cmd)
+// void echo(char *cmd)
+// {
+// 	char arg[80] = {0};
+// 	int cmd_len = isolate_cmd();
+// 	int16_t start_idx = COORD(11, 24);
+//         for (int i = 0; i < cmd_len; i++) {
+//             arg[i] = (char)(screens[current_screen].buffer[start_idx + i] & 0xFF);
+// 			// ft_printf(-1, " -> cmd len = %d, cmd = %s", cmd_len, cmd);
+//         }
+// 	arg[cmd_len] = '\0';
+// 	ft_printf(-1, "%s\n", arg);
+// }
+
+int ft_strwcmp(char *s1, char *s2)
 {
-	char arg[80] = {0};
-	int cmd_len = isolate_cmd();
-	int16_t start_idx = COORD(11, 24);
-        for (int i = 0; i < cmd_len; i++) {
-            arg[i] = (char)(screens[current_screen].buffer[start_idx + i] & 0xFF);
-			// ft_printf(-1, " -> cmd len = %d, cmd = %s", cmd_len, cmd);
-        }
-	arg[cmd_len] = '\0';
-	ft_printf(-1, "%s\n", arg);
+    int i = 0;
+    while (s1[i] == s2[i] && s1[i] != '\0' && s2[i] != '\0' 
+           && s1[i] != ' ' && s2[i] != ' ')
+    {
+        i++;
+    }
+    return ((unsigned char)s1[i] - (unsigned char)s2[i]);
 }
+
+
+uint8_t fill_color(char *cmd)
+{
+	if(*cmd == '\0') return 16;
+    if (!ft_strwcmp(cmd, "black"))		  return BLACK;
+    if (!ft_strwcmp(cmd, "blue"))          return BLUE;
+    if (!ft_strwcmp(cmd, "green"))         return GREEN;
+    if (!ft_strwcmp(cmd, "cyan"))          return CYAN;
+    if (!ft_strwcmp(cmd, "red"))           return RED;
+    if (!ft_strwcmp(cmd, "magenta"))       return MAGENTA;
+    if (!ft_strwcmp(cmd, "brown"))         return BROWN;
+    if (!ft_strwcmp(cmd, "light_grey"))    return LIGHT_GREY;
+    if (!ft_strwcmp(cmd, "dark_grey"))     return DARK_GREY;
+    if (!ft_strwcmp(cmd, "light_blue"))    return LIGHT_BLUE;
+    if (!ft_strwcmp(cmd, "light_green"))   return LIGHT_GREEN;
+    if (!ft_strwcmp(cmd, "light_cyan"))    return LIGHT_CYAN;
+    if (!ft_strwcmp(cmd, "light_red"))     return LIGHT_RED;
+    if (!ft_strwcmp(cmd, "light_magenta")) return LIGHT_MAGENTA;
+    if (!ft_strwcmp(cmd, "light_brown"))   return LIGHT_BROWN;
+    if (!ft_strwcmp(cmd, "white"))         return WHITE;
+    return 16;
+}
+
+void change_color(char *cmd)
+{
+	
+	if(!ft_strcmp(cmd, "setcolor"))
+	{
+		ft_printf(-1, "setcolor 'background' 'foreground' 'prompt'\n");
+		return ;
+	}
+	uint8_t bg = BLACK;
+	uint8_t fg = WHITE;
+	uint8_t pr = GREEN;
+	int i = 0;
+	while(cmd[i] && cmd[i] != ' ')
+		i++;
+	// i++;
+	bg = fill_color(cmd + i);
+	if(bg == 16)
+	{
+		ft_printf(-1, "error: invalid background color\n");
+		return;
+	}
+	while(cmd[i] && cmd[i] != ' ')
+		i++;
+	// i++;
+	fg = fill_color(cmd + i);
+	if(fg == 16)
+	{
+		ft_printf(-1, "error: invalid foreground color\n");
+		return;
+	}
+	while(cmd[i] && cmd[i] != ' ')
+		i++;
+	// i++;
+	pr = fill_color(cmd + i);
+	if(pr == 16)
+	{
+		ft_printf(-1, "error: invalid prompt color\n");
+		return;
+	}
+	if(bg == fg || bg == pr)
+	{
+		ft_printf(-1, "error: invalid matching colors\n");
+		return;
+	}
+	set_terminal_color(current_screen, bg, fg, pr);
+}
+
 
 void exec_cmd(char *cmd)
 {
@@ -182,8 +264,25 @@ void exec_cmd(char *cmd)
 		ft_printf(-1, "System is rebooting...\n");
 		outb(0x64, 0xFE);
 	}
-	if(!ft_strncmp(cmd, "echo", 4))
-		echo(cmd);
+	// if(!ft_strncmp(cmd, "echo", 4))
+	// 	echo(cmd);
+	if(!ft_strncmp(cmd, "setcolor", 9))
+		change_color(cmd);
+}
+
+// void re_write_buff()
+// {
+
+// }
+
+void display_prompt()
+{
+	update_cursor(7, VGA_HEIGHT - 1);
+	char prompt[6] = "KFS2 >";
+	for(int i = 0; i < 6 ;i++){
+		screens[current_screen].buffer[(VGA_HEIGHT - 1) * VGA_WIDTH + i] = vga_entry(prompt[i], screens[current_screen].prompt_color);
+	}
+	screens[current_screen].term_column = 7;
 }
 
 void enter()
@@ -194,8 +293,8 @@ void enter()
         int16_t start_idx = COORD(7, 24);
         for (int i = 0; i < cmd_len; i++) {
             cmd[i] = (char)(screens[current_screen].buffer[start_idx + i] & 0xFF);
-			// ft_printf(-1, " -> cmd len = %d, cmd = %s", cmd_len, cmd);
         }
+		// ft_printf(-1, " -> cmd len = %d, cmd = %s", cmd_len, cmd);
         cmd[cmd_len] = '\0';
     }
 	
@@ -217,8 +316,7 @@ void enter()
 		update_cursor(7, VGA_HEIGHT - 1);
 		char prompt[6] = "KFS2 >";
 		for(int i = 0; i < 6 ;i++){
-			screens[current_screen].buffer[(VGA_HEIGHT - 1) * VGA_WIDTH + i] = vga_entry(prompt[i], LIGHT_BLUE);
-	
+			screens[current_screen].buffer[(VGA_HEIGHT - 1) * VGA_WIDTH + i] = vga_entry(prompt[i], screens[current_screen].prompt_color);
 		}
 		screens[current_screen].term_column = 7;
 		if(cmd_len > 0)
