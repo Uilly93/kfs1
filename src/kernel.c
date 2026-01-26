@@ -59,6 +59,11 @@ void print_kfs_logo() {
 
 void kernel_main(void)
 {
+	init_gdt();
+	gdt_register gdtr;
+	gdtr.size = (sizeof(gdt_entry) * GDT_SIZE) -1;
+	gdtr.address = GDT_ADRESS;
+	load_gdt((u_int32_t)&gdtr);
 	/* Initialize terminal interface */
 	screen_multi_init();
 
@@ -68,6 +73,7 @@ void kernel_main(void)
 	//ft_printf("%X\n", 42);
 	//ft_printf("%p\n", VGA_MEMORY);
 	// print_kfs_logo();
+	print_stack(130);
 	while(0xcafe) {
 		memcpy(terminal_buffer, &screens[current_screen].buffer, VGA_LEN);
 		if (inb(0x64) & 1)
