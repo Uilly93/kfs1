@@ -16,4 +16,6 @@ void print_stack(uint8_t size)
 		if( i % 3 == 0)
 			ft_printf(-1, "\n");
 	}
+	if((size -1) % 3)
+		ft_printf(-1, "\n");
 }

@@ -4,7 +4,6 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
-#include <sys/types.h>
 #include <stdarg.h>
 #include "vga.h"
 #include "gdt.h"
@@ -14,17 +13,17 @@
 #define MAX_SCREEN 3
 
 typedef struct {
-	u_int16_t buffer[VGA_HEIGHT * VGA_WIDTH * sizeof(u_int16_t)];
-	u_int8_t term_row;
-	u_int8_t term_column;
-	u_int8_t term_color;
-    u_int8_t prompt_color;
-	u_int8_t cursor_color;
-	u_int16_t cursor_pos;
+	uint16_t buffer[VGA_HEIGHT * VGA_WIDTH * sizeof(uint16_t)];
+	uint8_t term_row;
+	uint8_t term_column;
+	uint8_t term_color;
+    uint8_t prompt_color;
+	uint8_t cursor_color;
+	uint16_t cursor_pos;
 } screen_t;
 
-extern u_int16_t* terminal_buffer;
-extern u_int8_t current_screen;
+extern uint16_t* terminal_buffer;
+extern uint8_t current_screen;
 extern screen_t screens[MAX_SCREEN];
 
 static const char scancode_to_ascii[] = {
@@ -53,10 +52,11 @@ int     ft_strncmp(const char *s1, const char *s2, size_t n);
 void	*ft_memmove(void *dest, const void *src, size_t n);
 void	*memcpy(void *dest, const void *src, size_t n);
 size_t	ft_strlen(const char *s);
+int	    ft_atoi(const char *nptr);
 void	enable_cursor(uint8_t cursor_start, uint8_t cursor_end);
 void	disable_cursor();
 void	update_cursor(uint8_t x, uint8_t y);
-void	switch_screen(u_int8_t index);
+void	switch_screen(uint8_t index);
 void    screen_multi_init(void);
 void	set_terminal_color(uint8_t screen_index, vga_color bg, vga_color fg, vga_color prompt);
 void	set_cursor_color(uint8_t screen_index, vga_color bg, vga_color fg);
@@ -68,6 +68,13 @@ void	cursor_down();
 void	cursor_left();
 void	cursor_right();
 void    print_kfs_logo();
-
+void    clear();
+void    reboot();
+int     isolate_cmd();
+int     ft_strwcmp(char *s1, char *s2);
+uint8_t fill_color(char *cmd);
+void    change_color(char *cmd);
+void    print_stack_cmd(char *cmd);
+void    exec_cmd(char *cmd);
 
 #endif 

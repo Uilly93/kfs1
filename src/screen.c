@@ -57,7 +57,7 @@ void set_terminal_color(uint8_t screen_index, vga_color bg, vga_color fg, vga_co
     }
 }
 
-void switch_screen(u_int8_t index) {
+void switch_screen(uint8_t index) {
  	current_screen = index;
  	memset(terminal_buffer, ' ', VGA_LEN);
  	memcpy(terminal_buffer, &screens[current_screen].buffer, VGA_LEN);
@@ -93,13 +93,6 @@ void screen_putchar(char c, int16_t *idx)
 	{		
 		enter();
 		return;
-		// ft_memmove(screens[current_screen].buffer, screens[current_screen].buffer + 80, VGA_SCROLL);
-		// for (int x = 0; x < VGA_WIDTH; x++) {
-		// 	screens[current_screen].buffer[(VGA_HEIGHT - 1) * VGA_WIDTH + x] = (uint16_t)' ';
-		// }
-		// screens[current_screen].term_column = 7;
-		// screens[current_screen].term_row = 24;
-		// update_cursor(screens[current_screen].term_column, screens[current_screen].term_row);
 	}
 	if (screens[current_screen].term_column == VGA_WIDTH - 1)
 		return ;
