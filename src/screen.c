@@ -26,7 +26,6 @@ void init_screen(int index)
 
 void screen_multi_init(void)
 {
-	// char prompt[6] = "KFS2 >";
 	for(int i = 0; i < MAX_SCREEN; i++){
 		init_screen(i);
 	}
@@ -59,7 +58,7 @@ void set_terminal_color(uint8_t screen_index, vga_color bg, vga_color fg, vga_co
 
 void switch_screen(uint8_t index) {
  	current_screen = index;
- 	memset(terminal_buffer, ' ', VGA_LEN);
+ 	ft_memset(terminal_buffer, ' ', VGA_LEN);
  	memcpy(terminal_buffer, &screens[current_screen].buffer, VGA_LEN);
  	update_cursor(screens[current_screen].term_column, screens[current_screen].term_row);
 }

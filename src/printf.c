@@ -1,8 +1,5 @@
 
 #include "kernel.h"
-// #include <stdlib.h>
-// #include <stdio.h>
-// #include <stddef.h>
 
 static int	ft_putchar(char c, int16_t *idx)
 {
@@ -81,11 +78,6 @@ static int	ft_putnbr_base(unsigned int nb, char *base, int16_t *idx)
 		return (1);
 	}
 	i = 0;
-	// if (nb < 0)
-	// {
-	// 	ft_putchar('-', buffer);
-	// 	nb *= -1;
-	// }
 	while (nb > 0)
 	{
 		result[i] = base[nb % ft_strlen(base)];
@@ -191,7 +183,6 @@ int ft_printf(int16_t idx, const char *s, ...)
 				len += ft_format(s + i++, &args, &idx);
 			else
 				len += ft_format(s + i++, &args, &idx);
-			// index++;
 		}
 		else
 		{
@@ -205,6 +196,5 @@ int ft_printf(int16_t idx, const char *s, ...)
 		}
 	}
 	va_end(args);
-	//ft_memmove(terminal_buff, buffer, ft_strlen((char *)buffer));
 	return (len);
 }

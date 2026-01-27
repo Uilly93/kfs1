@@ -2,8 +2,6 @@
 
 int isolate_cmd()
 {
-	// size_t start = COORD(7, 24);
-	// size_t end = COORD(80, 24);
 	int16_t start = (VGA_HEIGHT - 1) * VGA_WIDTH + 7;
     int16_t end = (VGA_HEIGHT - 1) * VGA_WIDTH + (VGA_WIDTH - 1);
     while (end >= start && (screens[current_screen].buffer[end] & 0xFF) == ' ') {
@@ -44,7 +42,6 @@ int ft_strwcmp(char *s1, char *s2)
 
 uint8_t fill_color(char *cmd)
 {
-	ft_printf(-1, "arg = .%s.\n", cmd);
 	if(*cmd == '\0') return 16;
     if (!ft_strwcmp(cmd, "black"))		   return BLACK;
     if (!ft_strwcmp(cmd, "blue"))          return BLUE;
@@ -62,12 +59,24 @@ uint8_t fill_color(char *cmd)
     if (!ft_strwcmp(cmd, "light-magenta")) return LIGHT_MAGENTA;
     if (!ft_strwcmp(cmd, "light-brown"))   return LIGHT_BROWN;
     if (!ft_strwcmp(cmd, "white"))         return WHITE;
-	ft_printf(-1, "no\n");
     return 16;
+}
+
+void isolate_arg(char *cmd, char *isol)
+{
+	ft_memset(isol, '\0', 80);
+	int i = 0;
+	while(cmd[i] && cmd[i] != ' ')
+	{
+		isol[i] = cmd[i];
+		i++;
+	}
+	isol[i] = '\0';
 }
 
 void change_color(char *cmd)
 {
+	char isol[80] = {0};
 	if(!ft_strcmp(cmd, "setcolor"))
 	{
 		ft_printf(-1, "setcolor: 'background' 'foreground' 'prompt'\n");
@@ -77,31 +86,31 @@ void change_color(char *cmd)
 	uint8_t fg = WHITE;
 	uint8_t pr = GREEN;
 	int i = 0;
-	while(cmd[i] && cmd[i] != ' ')
-		i++;
-	i++;
+	while(cmd[i] && cmd[i] != ' ') i++;
+	while(cmd[i] && cmd[i] == ' ') i++;
 	bg = fill_color(cmd + i);
 	if(bg == 16)
 	{
-		ft_printf(-1, "error: invalid background color: .%s.\n", cmd + i);
+		isolate_arg(cmd + i, isol);
+		ft_printf(-1, "error: invalid background color: %s\n", isol);
 		return;
 	}
-	while(cmd[i] && cmd[i] != ' ')
-		i++;
-	i++;
+	while(cmd[i] && cmd[i] != ' ') i++;
+	while(cmd[i] && cmd[i] == ' ') i++;
 	fg = fill_color(cmd + i);
 	if(fg == 16)
 	{
-		ft_printf(-1, "error: invalid foreground color: .%s.\n", cmd + i);
+		isolate_arg(cmd + i, isol);
+		ft_printf(-1, "error: invalid foreground color: %s\n", isol);
 		return;
 	}
-	while(cmd[i] && cmd[i] != ' ')
-		i++;
-	i++;
+	while(cmd[i] && cmd[i] != ' ') i++;
+	while(cmd[i] && cmd[i] == ' ') i++;
 	pr = fill_color(cmd + i);
 	if(pr == 16)
 	{
-		ft_printf(-1, "error: invalid prompt color: .%s.\n", cmd + i);
+		isolate_arg(cmd + i, isol);
+		ft_printf(-1, "error: invalid prompt color: %s\n", isol);
 		return;
 	}
 	if(bg == fg || bg == pr)
@@ -136,7 +145,6 @@ void print_stack_cmd(char *cmd)
 
 void exec_cmd(char *cmd)
 {
-	// ft_printf(-1, "cmd = %s\n", cmd);
 	if(!ft_strcmp(cmd, "clear"))
 		clear();
 	else if(!ft_strcmp(cmd, "ascii"))
@@ -147,8 +155,8 @@ void exec_cmd(char *cmd)
 		print_stack_cmd(cmd);
 	else if (!ft_strcmp(cmd, "reboot"))
 		outb(0x64, 0xFE);
-	else if(!ft_strncmp(cmd, "resetcolor", 10))
+	else if(!ft_strcmp(cmd, "resetcolor"))
 		set_terminal_color(current_screen, BLACK, LIGHT_GREY, GREEN);
-	else if(!ft_strncmp(cmd, "help", 4))
+	else if(!ft_strcmp(cmd, "help"))
 		ft_printf(-1, "try to use: clear, ascii, setcolor, printstack, reboot or resetcolors\n");
 }

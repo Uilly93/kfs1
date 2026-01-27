@@ -9,7 +9,7 @@ size_t ft_strlen(const char *s) {
 	return i;
 }
 
-void *memset(void *s, int c, size_t n) {
+void *ft_memset(void *s, int c, size_t n) {
 	char *s1 = s;
 	size_t i = 0;
 	while (i < n)
